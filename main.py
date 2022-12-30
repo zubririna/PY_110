@@ -1,75 +1,111 @@
 import json
 import random
 import faker
+from conf import MODEL
 
 
-def get_model() ->str:    # считывает из файла поле model
-    with open("conf.py", encoding='utf-8') as f:
-        f_m=f.readline()
-    return f_m
-
-
-def get_title() ->str:   # считывает из файла название книги
+def get_title() ->str:
+    """
+    Функция считывает из файла название книги
+    :return: наименовани книги из файла
+    """
     with open("books.txt", encoding='utf-8') as f:
-        f_t=f.readline()
+        f_t=random.choice(f.readlines())
     return f_t
-# нужно сделать выбор рандомным
 
 
-def get_year() ->int:    # рандомно формирует год из заданного диапозона
+def get_year() ->int:
+    """
+    Функция рандомно формирует год из заданного диапозона
+    :return: год написания произведения
+    """
     x=random.randint(1700,2022)
     return x
 
 
-def get_pages() ->int:    # рандомно формирует номер страницы из заданного диапозона
+def get_pages() ->int:
+    """
+    Функция рандомно формирует количество страниц из заданного диапозона
+    :return: количество страниц книги
+    """
     x = random.randint(10, 400)
     return x
 
 
-def get_isbn13():   # берет isbn13  из faker
+def get_isbn13():
+    """
+    Функция берет isbn13  из faker
+    :return: isbn13 для заданной книги
+    """
     fake=faker.Faker("ru")
-    fake.seed(0)
     return fake.isbn13()
 
 
-def get_rating() ->float:   # рандомно формирует рейтинг из заданного диапозона
+def get_rating() ->float:
+    """
+    Функция рандомно формирует рейтинг книги из заданного диапозона
+    :return: рейтинг книги
+    """
     x = random.uniform(0, 5)
     return x
 
 
 def get_price() ->float:   # рандомно формирует стоимость из заданного диапозона
+    """
+    Функция рандомно формирует стоимость книги из заданного диапозона
+    :return: стоимость книги
+    """
     x = random.uniform(100, 2000)
     return x
 
 
-def get_author() ->list:   # берет автора из faker, отдельно имя и фамилию, чтобы оформить в список
+def get_author() ->list:
+    """
+    Функция берет автора из faker, отдельно имя и фамилию, чтобы оформить в список
+    :return: имя и фамилия автора книги списком
+    """
     fake = faker.Faker("ru")
-    fake.seed(3)
     fio = [fake.first_name_male(), fake.last_name_male()]
     return fio
 
 
+def book_gen(start_pk=1):
+    """
+    Функция формирует характеристику книги
+    :param start_pk: начальный счетчик книги
+    :yield: словарь с характеристиками книги
+    """
+    dict_book = {
+        "model": MODEL,
+        "pk": start_pk,
+        "fields": {
+            "title": get_title(),
+            "year": get_year(),
+            "pages": get_pages(),
+            "isbn13": get_isbn13(),
+            "rating": get_rating(),
+            "price": get_price(),
+            "author": get_author()
+        }
+    }
+    start_pk+=1
+    yield dict_book
+
+
 def main():
-    model_ = get_model()
-    pk=1
+    """
+    Функция формирует список из 100 словарей с характеристиками книг
+    :return:список из 100 книг
+    """
+
     dict_list=[]
+    pk_=1
+    gen = book_gen(pk_)
+    for i in range(100):
+        cur_book = next(gen)
+        dict_list = dict_list.append(cur_book)
+        pk_+=1
     with open('itog.json', "w", encoding='utf-8') as file:
-        for i in range(100):
-            dict_book = {
-                "model": model_,
-                "pk": pk,
-                "fields": {
-                    "title": get_title(),
-                    "year": get_year(),
-                    "pages": get_pages(),
-                    "isbn13": get_isbn13(),
-                    "rating": get_rating(),
-                    "price": get_price(),
-                    "author": get_author()
-                }
-            }
-            dict_list=dict_list.append(dict_book)
-            pk+=1
         dict_list=json.load(file)
     return dict_list
 
